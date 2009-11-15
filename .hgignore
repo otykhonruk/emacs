@@ -1,2 +1,5 @@
 syntax: glob
+
+# backup and temprary files produced by emacs
 *~
+\#*\#
