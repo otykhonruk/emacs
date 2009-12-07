@@ -91,3 +91,5 @@
         (sbcl ("sbcl"))))
 
 ; (setq inferior-lisp-program "ny")
+
+(require 'mercurial)
