@@ -31,10 +31,9 @@
   "Reserved, currently unused.")
 
 (defvar *nls-lang* nil)
-(defvar *sql-buffer-coding* nil)
+(defvar *sql-buffer-process-coding* nil)
 
-(defvar *sql-history-file* ".sql_history")
-
+(defvar *sql-history-prefix* ".sql_history")
 
 (defun alt-register-sql-profile (name profile)
   (let ((cons (assoc name *sql-profiles*)))
@@ -46,8 +45,8 @@
 (defun alt-sql-set-coding ()
   (set-buffer (sql-find-sqli-buffer))
   (set-buffer-process-coding-system
-   (car *sql-buffer-coding*)
-   (cdr *sql-buffer-coding*)))
+   *sql-buffer-process-coding*
+   *sql-buffer-process-coding*))
 
 
 (defun alt-sql-login (name)
@@ -63,7 +62,7 @@
           sql-database (fourth cons))
     (if (file-accessible-directory-p sqlpath) (cd sqlpath))
     (setq sql-input-ring-file-name 
-	  (concat (file-name-as-directory sqlpath) *sql-history-file*))
+	  (concat (file-name-as-directory sqlpath) *sql-history-prefix* "." name))
     (if sqlcmd 
         (funcall sqlcmd)
       (sql-oracle))
