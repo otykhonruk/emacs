@@ -32,8 +32,8 @@
 
 (defvar *nls-lang* nil)
 (defvar *sql-buffer-process-coding* nil)
-
 (defvar *sql-history-prefix* ".sql_history")
+(defvar *sql-default-product* 'oracle)
 
 (defun alt-register-sql-profile (name profile)
   (let ((cons (assoc name *sql-profiles*)))
@@ -55,7 +55,7 @@
    (list (completing-read "Choose profile: " *sql-profiles*)))
   (if *nls-lang* (setenv "NLS_LANG" *nls-lang*))
   (let* ((cons (assoc name *sql-profiles*))
-         (sqlcmd (fifth cons))
+         (product (or (fifth cons) *sql-default-product*))
          (sqlpath (or *sql-path* (getenv "SQL_PATH"))))
     (setq sql-user (second cons)
           sql-password (third cons) 
@@ -63,9 +63,7 @@
     (if (file-accessible-directory-p sqlpath) (cd sqlpath))
     (setq sql-input-ring-file-name 
 	  (concat (file-name-as-directory sqlpath) *sql-history-prefix* "." name))
-    (if sqlcmd 
-        (funcall sqlcmd)
-      (sql-oracle))
+    (sql-product-interactive product)
     (alt-sql-set-coding)
     (sql-rename-buffer)))
 
