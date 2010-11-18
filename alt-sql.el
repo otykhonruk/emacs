@@ -53,14 +53,16 @@
   "Custom login procedure. Added features: profiles, environment variables, coding system."
   (interactive 
    (list (completing-read "Choose profile: " *sql-profiles*)))
-  (if *nls-lang* (setenv "NLS_LANG" *nls-lang*))
   (let* ((cons (assoc name *sql-profiles*))
          (product (or (fifth cons) *sql-default-product*))
          (sqlpath (or *sql-path* (getenv "SQL_PATH"))))
+    (if (and (equal product 'oracle) *nls-lang*)
+	(setenv "NLS_LANG" *nls-lang*))
+    (if (file-accessible-directory-p sqlpath)
+	(cd sqlpath))
     (setq sql-user (second cons)
           sql-password (third cons) 
           sql-database (fourth cons))
-    (if (file-accessible-directory-p sqlpath) (cd sqlpath))
     (setq sql-input-ring-file-name 
 	  (concat (file-name-as-directory sqlpath) *sql-history-prefix* "." name))
     (sql-product-interactive product)
