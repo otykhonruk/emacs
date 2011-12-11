@@ -69,25 +69,6 @@
     (alt-sql-set-coding)
     (sql-rename-buffer)))
 
-(define-skeleton alt-plsql-pkg-skel
-  "Creates PL/SQL package declaration"
-  "Name of the package: "
-  "create or replace package " str " is" \n
-  _ \n
-  "end;" \n
-  "/" \n
-  "show errors" \n
-  "/" \n
-)
-
-(define-skeleton alt-plsql-loop-skel
-  "Inserts PL/SQL LOOP."
-  nil
-  "loop" \n
-  _ \n
-  "end loop;" \n
-)
-
 
 (provide 'alt-sql)
 ;;; alt-sql.el ends here
