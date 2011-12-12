@@ -31,30 +31,31 @@
 (require 'semantic)
 
 
-(defun alt-current-class-vars ()
-  "Returns list of tags of variable type of current class"
-  (let* ((class (semantic-current-tag-of-class 'type))
-	 (members (semantic-tag-get-attribute class :members))
-	 (vars (semantic-find-tags-by-class 'variable members)))
-    vars))
+(defun alt-current-class ()
+  (semantic-current-tag-of-class 'type))
+
+
+(defun alt-class-vars (class)
+  (let ((members (semantic-tag-get-attribute class :members)))
+    (semantic-find-tags-by-class 'variable members)))
 
 
 (defun alt-java-accessors (fname)
   "Writes conventional getter and setter for given class field."
   (interactive
    (list
-    (semantic-read-variable "Field name: " nil (alt-current-class-vars))))
-  (let* ((tag (semantic-find-first-tag-by-name fname (alt-current-class-vars)))
+    (semantic-read-variable "Field name: " nil (alt-class-vars (alt-current-class)))))
+  (let* ((tag (semantic-find-first-tag-by-name fname (alt-class-vars (alt-current-class))))
 	 (type (semantic-tag-type tag))
 	 (name (semantic-tag-name tag))
-	 (cname (capitalize name)))
+	 (cname (upcase-initials name)))
     (save-excursion
       (let ((start (point)))
 	(insert (concat "\n public " type " get" cname "() {\nreturn " name ";\n}\n"))
 	(insert (concat "\n public void set" cname "(" type " " name ") {\nthis." name " = " name ";\n}\n"))
 	(indent-region start (point))))))
-  
 
+  
 (defun alt-java-comment-function ()
   "Inserts javadoc-style comment stub for function at current position."
   (interactive)
@@ -78,25 +79,31 @@
       (error "Point cursor to a function you want to comment"))))
 
 
-
 (defun alt-java-constructor ()
-  "Writes constructor for all final fields of current class."
+  "Writes constructor for all non-static final fields of current class."
   (interactive)
   (let* ((startpos (point))
-	 (vars (alt-current-class-vars))
-	 (ff (mapcar 
-	      '(lambda (tag)
-		 (cons (semantic-tag-name tag) (semantic-tag-type tag)))
-	      vars)))
-    (insert "public " (semantic-tag-name class) "(")
-    (dolist (f fields)
-      (insert (concat (cdr ff) " " (car ff) ", ")))
-    (delete-char -2)
+	(class (alt-current-class))
+	(vars 
+	 (delq nil
+	       (mapcar 
+		'(lambda (tag)
+		   (let ((modifiers (semantic-tag-modifiers tag)))
+		     (when (and (member "final" modifiers)
+				(not (member "static" modifiers)))
+		       (cons (semantic-tag-name tag) (semantic-tag-type tag)))))
+		(alt-class-vars class)))))
+    (insert (semantic-tag-name class) "(")
+    (when vars
+	(dolist (var vars)
+	  (insert (concat (cdr var) " " (car var) ", ")))
+      (delete-char -2))
     (insert ") {\n")
     (dolist (var vars)
-      (insert (concat "this." (car ff) " = " (car ff) ";\n")))
+      (insert (concat "this." (car var) " = " (car var) ";\n")))
     (insert "}\n")
-    (indent-region startpos (point))))
+    (indent-region startpos (point))
+    (goto-char startpos)))
 
 
 (define-skeleton alt-java-main
@@ -105,7 +112,6 @@
   > "public static void main(String[] args) {" \n
   > _ \n
   "}" > \n)
-
 
 
 (provide 'alt-java)
