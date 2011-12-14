@@ -51,15 +51,15 @@
 	 (cname (upcase-initials name)))
     (save-excursion
       (let ((start (point)))
-	(insert (concat "\n public " type " get" cname "() {\nreturn " name ";\n}\n"))
-	(insert (concat "\n public void set" cname "(" type " " name ") {\nthis." name " = " name ";\n}\n"))
+	(insert "\n public " type " get" cname "() {\nreturn " name ";\n}\n")
+	(insert "\n public void set" cname "(" type " " name ") {\nthis." name " = " name ";\n}\n")
 	(indent-region start (point))))))
 
   
 (defun alt-java-comment-function ()
   "Inserts javadoc-style comment stub for function at current position."
   (interactive)
-  (let ((tag (car (reverse (semantic-find-tag-by-overlay)))))
+  (let ((tag (last (semantic-find-tag-by-overlay))))
     (if (semantic-tag-of-class-p tag 'function) ;;  if function
 	(let ((start (semantic-tag-start tag))
 	      (args (semantic-tag-function-arguments tag))
@@ -68,10 +68,10 @@
 	  (goto-char start)
 	  (insert "/**\n* \n*\n")
 	  (dolist (arg args)
-	    (insert (concat "* @param " (semantic-tag-name arg)) "\n"))
+	    (insert "* @param " (semantic-tag-name arg)) "\n")
 	  (dolist (ex throws)
-	    (insert (concat "* @throws " ex "\n")))
-	  (if (not (equal type "void")) (insert "* @return \n"))
+	    (insert "* @throws " ex "\n"))
+	  (unless (equal type "void") (insert "* @return \n"))
 	  (insert "*/\n")
 	  (indent-region start (+ 1 (point)))
 	  (goto-char start)
@@ -84,6 +84,7 @@
   (interactive)
   (let* ((startpos (point))
 	(class (alt-current-class))
+	(classname (semantic-tag-name class))
 	(vars 
 	 (delq nil
 	       (mapcar 
@@ -92,15 +93,12 @@
 		     (when (and (member "final" modifiers)
 				(not (member "static" modifiers)))
 		       (cons (semantic-tag-name tag) (semantic-tag-type tag)))))
-		(alt-class-vars class)))))
-    (insert (semantic-tag-name class) "(")
-    (when vars
-	(dolist (var vars)
-	  (insert (concat (cdr var) " " (car var) ", ")))
-      (delete-char -2))
-    (insert ") {\n")
+		(alt-class-vars class))))
+	(paramlist 
+	 (mapconcat '(lambda (v) (concat (cdr v) " " (car v))) vars ", ")))
+    (insert classname "(" paramlist ") {\n")
     (dolist (var vars)
-      (insert (concat "this." (car var) " = " (car var) ";\n")))
+      (insert "this." (car var) " = " (car var) ";\n"))
     (insert "}\n")
     (indent-region startpos (point))
     (goto-char startpos)))
