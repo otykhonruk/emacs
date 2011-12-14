@@ -40,13 +40,13 @@
     (semantic-find-tags-by-class 'variable members)))
 
 
-(defun alt-java-accessors (fname)
+(defun alt-java-accessors (tag)
   "Writes conventional getter and setter for given class field."
   (interactive
-   (list
-    (semantic-read-variable "Field name: " nil (alt-class-vars (alt-current-class)))))
-  (let* ((tag (semantic-find-first-tag-by-name fname (alt-class-vars (alt-current-class))))
-	 (type (semantic-tag-type tag))
+   (let* ((tags (alt-class-vars (alt-current-class)))
+	  (name (semantic-read-variable "Field name: " nil tags)))
+     (list (semantic-find-first-tag-by-name name tags))))
+  (let* ((type (semantic-tag-type tag))
 	 (name (semantic-tag-name tag))
 	 (cname (upcase-initials name)))
     (save-excursion
